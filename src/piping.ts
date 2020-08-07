@@ -100,6 +100,19 @@ export class Server {
 
   public generateHandler(useHttps: boolean): Handler {
     return (req: HttpReq, res: HttpRes) => {
+      // Authenticate
+      var header = req.headers['authorization']||'',
+      token = header.split(/\s+/).pop()||'',
+      auth = Buffer.from(token, 'base64').toString(),
+      parts = auth.split(/:/),
+      username = parts[0],
+      password = parts[1];
+      if ((username != process.env.USERNAME) || (password != process.env.PASSWORD)) {
+          res.writeHead(401, {'WWW-Authenticate': 'Basic realm="piping-server"'});
+          res.end();
+          return;
+      }
+
       // Get path name
       const reqPath: string =
           url.resolve(
